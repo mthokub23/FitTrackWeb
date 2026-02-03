@@ -1,20 +1,14 @@
-const API_KEY = process.env.REACT_APP_NUTRITIONIX_API_KEY;
-const APP_ID = process.env.REACT_APP_NUTRITIONIX_APP_ID;
-const BASE_URL = process.env.REACT_APP_NUTRITIONIX_BASE_URL || 'https://trackapi.nutritionix.com/v2';
+const API_KEY = process.env.REACT_APP_SPOONACULAR_API_KEY;
+const BASE_URL = process.env.REACT_APP_SPOONACULAR_BASE_URL || 'https://api.spoonacular.com';
 
-if (!API_KEY || !APP_ID) {
-  console.warn('Nutritionix API credentials are not set. Create a .env file with REACT_APP_NUTRITIONIX_APP_ID and REACT_APP_NUTRITIONIX_API_KEY');
+if (!API_KEY) {
+  console.warn('Spoonacular API key is not set. Create a .env file with REACT_APP_SPOONACULAR_API_KEY');
 }
 
 export const searchFoods = async (query) => {
   try {
-    const response = await fetch(`${BASE_URL}/search/instant?query=${encodeURIComponent(query)}`, {
-      method: 'GET',
-      headers: {
-        'x-app-id': APP_ID,
-        'x-app-key': API_KEY,
-        'Content-Type': 'application/json'
-      }
+    const response = await fetch(`${BASE_URL}/food/ingredients/search?query=${encodeURIComponent(query)}&number=10&apiKey=${API_KEY}`, {
+      method: 'GET'
     });
     
     if (!response.ok) {
@@ -22,12 +16,12 @@ export const searchFoods = async (query) => {
     }
     
     const data = await response.json();
-    return data.common.map(item => ({
-      id: item.food_name,
-      name: item.food_name,
+    return (data.results || []).map(item => ({
+      id: item.id,
+      name: item.name,
       servingUnit: 'g',
       servingQty: 100, // Default to 100g
-      imageUrl: item.photo.thumb
+      imageUrl: item.image ? `https://spoonacular.com/cdn/ingredients_100x100/${item.image}` : null
     }));
   } catch (error) {
     console.error('Error searching foods:', error);
@@ -37,38 +31,32 @@ export const searchFoods = async (query) => {
 
 export const getNutritionInfo = async (foodName, servingSize) => {
   try {
-    const response = await fetch(`${BASE_URL}/natural/nutrients`, {
-      method: 'POST',
-      headers: {
-        'x-app-id': APP_ID,
-        'x-app-key': API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query: `${servingSize}g ${foodName}`
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch nutrition data');
-    }
-    
-    const data = await response.json();
-    
-    if (data.foods && data.foods.length > 0) {
-      const food = data.foods[0];
-      return {
-        name: food.food_name,
-        calories: Math.round(food.nf_calories),
-        protein: Math.round(food.nf_protein),
-        carbs: Math.round(food.nf_total_carbohydrate),
-        fat: Math.round(food.nf_total_fat),
-        servingSize: servingSize,
-        servingUnit: 'g'
-      };
-    }
-    
-    return null;
+    // Find matching ingredient id using Spoonacular
+    const searchRes = await fetch(`${BASE_URL}/food/ingredients/search?query=${encodeURIComponent(foodName)}&number=1&apiKey=${API_KEY}`);
+    if (!searchRes.ok) throw new Error('Failed to find ingredient');
+    const searchData = await searchRes.json();
+    const first = (searchData.results || [])[0];
+    if (!first || !first.id) return null;
+
+    const infoRes = await fetch(`${BASE_URL}/food/ingredients/${first.id}/information?amount=${servingSize}&unit=gram&apiKey=${API_KEY}`);
+    if (!infoRes.ok) throw new Error('Failed to fetch nutrition data');
+    const data = await infoRes.json();
+
+    const nutrients = (data.nutrition && data.nutrition.nutrients) || [];
+    const find = (name) => {
+      const item = nutrients.find(n => (n.name || n.title || '').toLowerCase().includes(name));
+      return item ? Math.round(item.amount) : 0;
+    };
+
+    return {
+      name: data.name || foodName,
+      calories: find('calories'),
+      protein: find('protein'),
+      carbs: find('carbohydrate') || find('carbs'),
+      fat: find('fat'),
+      servingSize: servingSize,
+      servingUnit: 'g'
+    };
   } catch (error) {
     console.error('Error getting nutrition info:', error);
     return null;

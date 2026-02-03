@@ -144,7 +144,7 @@
   font-weight: 500;
 }
 
-.nutrion-value{
+.nutrition-value{
   color: #2563eb;
   font-weight: 700;
 }
@@ -156,7 +156,7 @@
 }
 
 .search-button,
-.nutrion-button,
+.nutrition-button,
 .add-button{
   background: color #ff6B00;
   color: white;
