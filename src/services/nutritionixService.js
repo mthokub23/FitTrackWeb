@@ -1,9 +1,14 @@
-const API_KEY = '8ae43668c9ea5e46057da817c88cad63';
-const APP_ID = 'f21bcfd4'; 
+const API_KEY = process.env.REACT_APP_NUTRITIONIX_API_KEY;
+const APP_ID = process.env.REACT_APP_NUTRITIONIX_APP_ID;
+const BASE_URL = process.env.REACT_APP_NUTRITIONIX_BASE_URL || 'https://trackapi.nutritionix.com/v2';
+
+if (!API_KEY || !APP_ID) {
+  console.warn('Nutritionix API credentials are not set. Create a .env file with REACT_APP_NUTRITIONIX_APP_ID and REACT_APP_NUTRITIONIX_API_KEY');
+}
 
 export const searchFoods = async (query) => {
   try {
-    const response = await fetch(`https://trackapi.nutritionix.com/v2/search/instant?query=${encodeURIComponent(query)}`, {
+    const response = await fetch(`${BASE_URL}/search/instant?query=${encodeURIComponent(query)}`, {
       method: 'GET',
       headers: {
         'x-app-id': APP_ID,
@@ -32,7 +37,7 @@ export const searchFoods = async (query) => {
 
 export const getNutritionInfo = async (foodName, servingSize) => {
   try {
-    const response = await fetch('https://trackapi.nutritionix.com/v2/natural/nutrients', {
+    const response = await fetch(`${BASE_URL}/natural/nutrients`, {
       method: 'POST',
       headers: {
         'x-app-id': APP_ID,

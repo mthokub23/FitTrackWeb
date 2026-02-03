@@ -25,7 +25,7 @@ const ComparisonModal=({ onClose }) => (
           </li>
           <li>Planned Pages: Dashboard, Nutrition, Workouts, Progress, Settings</li>
         </ul>
-        <h3>✅ Final App Implementation( Fittrack)</h3>
+        <h3>✅ Final App Implementation (FitTrack)</h3>
         <strong>Final implementation, is a more simple toned down app, that instead of being a fully branded community experience, is 
                 is used just for data collection. 
         </strong>

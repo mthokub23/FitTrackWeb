@@ -1,8 +1,8 @@
 {
-  "name": "fitnessappexam",
+  "name": "FitTrackWeb",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://mthokub23.github.io/fitnessappexam",
+  "homepage": "https://mthokub23.github.io/FitTrackWeb",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
